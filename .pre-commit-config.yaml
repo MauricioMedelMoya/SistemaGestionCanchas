@@ -1,0 +1,64 @@
+# .pre-commit-config.yaml
+# Configuración de hooks locales para validaciones antes de commit
+
+repos:
+  # Validación de sintaxis Python
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+      - id: end-of-file-fixer
+        name: Fix end of file
+      - id: check-yaml
+        name: Check YAML syntax
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=512']
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+
+  # Linting con flake8
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        name: Flake8 linting
+        args: ['--max-line-length=88', '--exclude=venv,migrations']
+
+  # Formateo con Black
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        name: Black code formatting
+        language_version: python3.11
+
+  # Validación de imports
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: Sort imports with isort
+        args: ['--profile', 'black']
+
+# Hook personalizado local para validar ADRs
+  - repo: local
+    hooks:
+      - id: check-adr
+        name: Check ADR validity
+        entry: python check_adr.py
+        language: system
+        pass_filenames: false
+        stages: [commit]
+
+      - id: check-architecture
+        name: Check architecture coherence
+        entry: python check_architecture.py
+        language: system
+        pass_filenames: false
+        stages: [commit]
+
+# Configuración general
+default_stages: [commit]
+fail_fast: false

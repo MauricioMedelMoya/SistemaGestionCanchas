@@ -1,0 +1,143 @@
+# 🚀 QUICK START - GitHub Hooks y ADR
+
+## 1️⃣ PRIMEROS PASOS
+
+### Inicializar Git
+```bash
+cd Arriendo_de_canchas
+git init
+git add .
+git commit -m "feat: implementacion ADR y GitHub Hooks"
+```
+
+### Instalar Pre-commit
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+### Verificar Validaciones
+```bash
+python check_adr.py           # ✅ Debe pasar
+python check_architecture.py  # ✅ Debe pasar
+```
+
+---
+
+## 2️⃣ WORKFLOW DIARIO
+
+```bash
+# 1. Hacer cambios
+code app.py
+
+# 2. Validar manualmente (opcional)
+python check_adr.py
+python check_architecture.py
+
+# 3. Commit (auto-ejecuta hooks)
+git add .
+git commit -m "feat: descripcion del cambio"
+# ↓ Pre-commit automáticamente:
+#   ✅ Valida ADRs
+#   ✅ Valida coherencia
+#   ✅ Formatea código (black)
+#   ✅ Organiza imports (isort)
+#   ✅ Lint (flake8)
+
+# 4. Push a GitHub
+git push origin main
+# ↓ GitHub Actions automáticamente:
+#   ✅ Ejecuta tests
+#   ✅ Valida ADRs
+#   ✅ Valida coherencia
+```
+
+---
+
+## 3️⃣ ARCHIVOS CLAVE
+
+| Archivo | Propósito |
+|---------|-----------|
+| `docs/adr/ADR-001.md` | Framework Web (Flask) |
+| `docs/adr/ADR-002.md` | Servidor WSGI (Gunicorn) |
+| `docs/adr/ADR-003.md` | Plataforma (Heroku) |
+| `Procfile` | `web: gunicorn app:app` |
+| `requirements.txt` | Dependencias (con gunicorn) |
+| `.pre-commit-config.yaml` | Configuración hooks locales |
+| `.github/workflows/validacion.yml` | GitHub Actions CI/CD |
+| `check_adr.py` | Validador de ADRs |
+| `check_architecture.py` | Validador de coherencia |
+
+---
+
+## 4️⃣ TROUBLESHOOTING
+
+### Error: "pre-commit: command not found"
+```bash
+pip install pre-commit
+```
+
+### Error: "check_adr.py no encontrado"
+```bash
+# Asegúrate de estar en la raíz del proyecto
+cd Arriendo_de_canchas
+python check_adr.py
+```
+
+### Pre-commit falla, quiero saltarlo (no recomendado)
+```bash
+git commit --no-verify  # ⚠️ Solo en emergencias
+```
+
+### Ver qué hace cada hook
+```bash
+pre-commit run --all-files  # Ejecuta todos manualmente
+```
+
+---
+
+## 5️⃣ DESPLIEGUE
+
+### En Heroku
+```bash
+heroku create arriendo-canchas
+git push heroku main
+heroku logs --tail
+```
+
+### En Render (alternativa)
+```bash
+# Conectar repo en render.com
+# La app se despliega automáticamente en cada push a main
+```
+
+---
+
+## 6️⃣ VALIDACIÓN RÁPIDA
+
+```bash
+# Verificar que todo está bien
+./check_all.sh  # Este script valida todo
+
+# O manualmente:
+python check_adr.py && python check_architecture.py && echo "✅ TODO OK"
+```
+
+---
+
+## ✅ CHECKLIST PRE-ENTREGA
+
+- [ ] `python check_adr.py` pasa ✅
+- [ ] `python check_architecture.py` pasa ✅
+- [ ] `pre-commit run --all-files` pasa ✅
+- [ ] Cambios commiteados a main
+- [ ] Push a GitHub realizado
+- [ ] GitHub Actions pasó (Actions tab)
+- [ ] Documentación actualizada
+- [ ] Procfile funciona localmente: `gunicorn app:app`
+
+---
+
+**Recursos:**
+- 📄 [GITHUB_HOOKS_ADR.md](GITHUB_HOOKS_ADR.md) - Documentación completa
+- 📋 [RESUMEN_EJECUTIVO.md](RESUMEN_EJECTUVO.md) - Resumen de implementación

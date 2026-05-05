@@ -29,7 +29,8 @@ class Cancha(db.Model):
     nombre = db.Column(db.String(120), nullable=False)
     tipo_deporte = db.Column(db.String(80), nullable=False)
     ubicacion = db.Column(db.String(200), nullable=False)
-    precio_por_hora = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    precio_por_hora = db.Column(db.Numeric(
+        10, 2), nullable=False, default=0.00)
     disponible = db.Column(db.Boolean, nullable=False, default=True)
     reservas = db.relationship("Reserva", backref="cancha", lazy=True)
 
@@ -57,12 +58,14 @@ class Reserva(db.Model):
     precio_total = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     estado = db.Column(db.String(20), nullable=False, default="pendiente")
     observaciones = db.Column(db.String(250), nullable=True)
-    cancha_id = db.Column(db.Integer, db.ForeignKey("canchas.id"), nullable=False)
+    cancha_id = db.Column(db.Integer, db.ForeignKey(
+        "canchas.id"), nullable=False)
 
     @property
     def hora_fin(self):
         hora_inicio = datetime.strptime(self.hora, '%H:%M').time()
-        hora_fin = datetime.combine(self.fecha, hora_inicio) + timedelta(hours=self.horas_arriendadas)
+        hora_fin = datetime.combine(
+            self.fecha, hora_inicio) + timedelta(hours=self.horas_arriendadas)
         return hora_fin.time()
 
     def __repr__(self):
@@ -133,7 +136,8 @@ def has_time_overlap(cancha_id, fecha, start_time_str, hours, exclude_id=None):
     """
     try:
         new_start = datetime.strptime(start_time_str, '%H:%M').time()
-        new_end_dt = datetime.combine(fecha, new_start) + timedelta(hours=hours)
+        new_end_dt = datetime.combine(
+            fecha, new_start) + timedelta(hours=hours)
         new_end = new_end_dt.time()
     except ValueError:
         return True  # Hora inválida → bloquear
@@ -151,7 +155,8 @@ def has_time_overlap(cancha_id, fecha, start_time_str, hours, exclude_id=None):
     for reserva in reservas:
         try:
             existing_start = datetime.strptime(reserva.hora, '%H:%M').time()
-            existing_end_dt = datetime.combine(fecha, existing_start) + timedelta(hours=reserva.horas_arriendadas)
+            existing_end_dt = datetime.combine(
+                fecha, existing_start) + timedelta(hours=reserva.horas_arriendadas)
             existing_end = existing_end_dt.time()
 
             # Condición de overlap
@@ -194,12 +199,18 @@ with app.app_context():
 
     if Cancha.query.count() == 0:
         canchas_ejemplo = [
-            Cancha(nombre="Cancha Fútbol 1", tipo_deporte="Futbol", ubicacion="Estadio Central", precio_por_hora=Decimal('22000.00'), disponible=True),
-            Cancha(nombre="Cancha Fútbol 2", tipo_deporte="Futbol", ubicacion="Estadio Norte", precio_por_hora=Decimal('22000.00'), disponible=True),
-            Cancha(nombre="Cancha Padel 1", tipo_deporte="Padel", ubicacion="Club Deportivo", precio_por_hora=Decimal('15000.00'), disponible=True),
-            Cancha(nombre="Cancha Padel 2", tipo_deporte="Padel", ubicacion="Club Deportivo", precio_por_hora=Decimal('15000.00'), disponible=True),
-            Cancha(nombre="Cancha Baby Fútbol", tipo_deporte="Baby futbol", ubicacion="Polideportivo Sur", precio_por_hora=Decimal('15000.00'), disponible=True),
-            Cancha(nombre="Multicancha", tipo_deporte="Multicancha", ubicacion="Centro Recreativo", precio_por_hora=Decimal('15000.00'), disponible=True),
+            Cancha(nombre="Cancha Fútbol 1", tipo_deporte="Futbol", ubicacion="Estadio Central",
+                   precio_por_hora=Decimal('22000.00'), disponible=True),
+            Cancha(nombre="Cancha Fútbol 2", tipo_deporte="Futbol", ubicacion="Estadio Norte",
+                   precio_por_hora=Decimal('22000.00'), disponible=True),
+            Cancha(nombre="Cancha Padel 1", tipo_deporte="Padel", ubicacion="Club Deportivo",
+                   precio_por_hora=Decimal('15000.00'), disponible=True),
+            Cancha(nombre="Cancha Padel 2", tipo_deporte="Padel", ubicacion="Club Deportivo",
+                   precio_por_hora=Decimal('15000.00'), disponible=True),
+            Cancha(nombre="Cancha Baby Fútbol", tipo_deporte="Baby futbol",
+                   ubicacion="Polideportivo Sur", precio_por_hora=Decimal('15000.00'), disponible=True),
+            Cancha(nombre="Multicancha", tipo_deporte="Multicancha", ubicacion="Centro Recreativo",
+                   precio_por_hora=Decimal('15000.00'), disponible=True),
         ]
         for cancha in canchas_ejemplo:
             db.session.add(cancha)
@@ -353,7 +364,8 @@ def listar_reservas():
         fecha_raw, hora_raw
     )
 
-    reservas = Reserva.query.order_by(Reserva.fecha.desc(), Reserva.hora.desc()).all()
+    reservas = Reserva.query.order_by(
+        Reserva.fecha.desc(), Reserva.hora.desc()).all()
     return render_template(
         "reservas/lista.html",
         reservas=reservas,
@@ -378,7 +390,8 @@ def crear_reserva():
         telefono_cliente = form_data["telefono_cliente"]
         fecha = validar_fecha(form_data["fecha"])
         hora = validar_hora(form_data["hora"])
-        horas_arriendadas = int(form_data["horas_arriendadas"]) if form_data["horas_arriendadas"].isdigit() else 1
+        horas_arriendadas = int(
+            form_data["horas_arriendadas"]) if form_data["horas_arriendadas"].isdigit() else 1
         estado = form_data["estado"]
         observaciones = form_data["observaciones"]
 
@@ -390,7 +403,8 @@ def crear_reserva():
         cancha = Cancha.query.get(cancha_id) if cancha_id else None
 
         if not canchas:
-            flash("Debes crear al menos una cancha antes de registrar reservas.", "danger")
+            flash(
+                "Debes crear al menos una cancha antes de registrar reservas.", "danger")
             return redirect(url_for("listar_canchas"))
 
         if not nombre_cliente or not correo_cliente or not telefono_cliente:
@@ -434,7 +448,8 @@ def crear_reserva():
             )
 
         if not cancha.disponible and estado != "cancelada":
-            flash("La cancha seleccionada no esta disponible para nuevas reservas.", "danger")
+            flash(
+                "La cancha seleccionada no esta disponible para nuevas reservas.", "danger")
             return render_template(
                 "reservas/form.html",
                 reserva=None,
@@ -444,7 +459,8 @@ def crear_reserva():
             )
 
         if estado != "cancelada" and has_time_overlap(cancha.id, fecha, hora, horas_arriendadas):
-            flash("La cancha no está disponible en ese horario debido a solapamiento con otra reserva.", "danger")
+            flash(
+                "La cancha no está disponible en ese horario debido a solapamiento con otra reserva.", "danger")
             return render_template(
                 "reservas/form.html",
                 reserva=None,
@@ -493,7 +509,8 @@ def editar_reserva(id):
         telefono_cliente = form_data["telefono_cliente"]
         fecha = validar_fecha(form_data["fecha"])
         hora = validar_hora(form_data["hora"])
-        horas_arriendadas = int(form_data["horas_arriendadas"]) if form_data["horas_arriendadas"].isdigit() else 1
+        horas_arriendadas = int(
+            form_data["horas_arriendadas"]) if form_data["horas_arriendadas"].isdigit() else 1
         estado = form_data["estado"]
         observaciones = form_data["observaciones"]
 
@@ -545,7 +562,8 @@ def editar_reserva(id):
             )
 
         if not cancha.disponible and estado != "cancelada":
-            flash("La cancha seleccionada no esta disponible para nuevas reservas.", "danger")
+            flash(
+                "La cancha seleccionada no esta disponible para nuevas reservas.", "danger")
             return render_template(
                 "reservas/form.html",
                 reserva=reserva,
@@ -555,7 +573,8 @@ def editar_reserva(id):
             )
 
         if estado != "cancelada" and has_time_overlap(cancha.id, fecha, hora, horas_arriendadas, reserva.id):
-            flash("La cancha no está disponible en ese horario debido a solapamiento con otra reserva.", "danger")
+            flash(
+                "La cancha no está disponible en ese horario debido a solapamiento con otra reserva.", "danger")
             return render_template(
                 "reservas/form.html",
                 reserva=reserva,
@@ -609,7 +628,8 @@ def calendario():
         fecha = datetime.now().date()
         fecha_raw = fecha.strftime("%Y-%m-%d")
 
-    canchas = Cancha.query.filter_by(disponible=True).order_by(Cancha.nombre.asc()).all()
+    canchas = Cancha.query.filter_by(
+        disponible=True).order_by(Cancha.nombre.asc()).all()
 
     reservas_dia = Reserva.query.filter(
         Reserva.fecha == fecha,
@@ -620,7 +640,7 @@ def calendario():
     for reserva in reservas_dia:
         if reserva.cancha_id not in reservas_por_cancha:
             reservas_por_cancha[reserva.cancha_id] = []
-        
+
         reserva_data = {
             'id': reserva.id,
             'hora': reserva.hora,
@@ -629,7 +649,7 @@ def calendario():
             'horas_arriendadas': reserva.horas_arriendadas,
             'nombre_cliente': reserva.nombre_cliente
         }
-        
+
         reservas_por_cancha[reserva.cancha_id].append(reserva_data)
 
     return render_template(

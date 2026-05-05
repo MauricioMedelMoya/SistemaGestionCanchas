@@ -126,18 +126,41 @@ def validar_hora(valor):
         return None
 
 
-def buscar_reserva_ocupada(cancha_id, fecha, hora, reserva_id=None):
-    consulta = Reserva.query.filter(
+def has_time_overlap(cancha_id, fecha, start_time_str, hours, exclude_id=None):
+    """
+    Verifica si hay solapamiento de horarios en la misma cancha/fecha.
+    Overlap si: new_start < existing_end AND new_end > existing_start
+    """
+    try:
+        new_start = datetime.strptime(start_time_str, '%H:%M').time()
+        new_end_dt = datetime.combine(fecha, new_start) + timedelta(hours=hours)
+        new_end = new_end_dt.time()
+    except ValueError:
+        return True  # Hora inválida → bloquear
+
+    # Query reservas NO canceladas en esa cancha/fecha
+    reservas = Reserva.query.filter(
         Reserva.cancha_id == cancha_id,
         Reserva.fecha == fecha,
-        Reserva.hora == hora,
-        Reserva.estado != "cancelada",
-    )
+        Reserva.estado != "cancelada"
+    ).all()
 
-    if reserva_id:
-        consulta = consulta.filter(Reserva.id != reserva_id)
+    if exclude_id:
+        reservas = [r for r in reservas if r.id != exclude_id]
 
-    return consulta.first()
+    for reserva in reservas:
+        try:
+            existing_start = datetime.strptime(reserva.hora, '%H:%M').time()
+            existing_end_dt = datetime.combine(fecha, existing_start) + timedelta(hours=reserva.horas_arriendadas)
+            existing_end = existing_end_dt.time()
+
+            # Condición de overlap
+            if new_start < existing_end and new_end > existing_start:
+                return True
+        except ValueError:
+            continue  # Skip reservas con hora malformada
+
+    return False
 
 
 def obtener_disponibilidad(fecha_raw, hora_raw):
@@ -420,8 +443,8 @@ def crear_reserva():
                 estados=ESTADOS_RESERVA,
             )
 
-        if estado != "cancelada" and buscar_reserva_ocupada(cancha.id, fecha, hora):
-            flash("Ya existe una reserva activa para esa cancha en la misma fecha y hora.", "danger")
+        if estado != "cancelada" and has_time_overlap(cancha.id, fecha, hora, horas_arriendadas):
+            flash("La cancha no está disponible en ese horario debido a solapamiento con otra reserva.", "danger")
             return render_template(
                 "reservas/form.html",
                 reserva=None,
@@ -531,8 +554,8 @@ def editar_reserva(id):
                 estados=ESTADOS_RESERVA,
             )
 
-        if estado != "cancelada" and buscar_reserva_ocupada(cancha.id, fecha, hora, reserva.id):
-            flash("Ya existe una reserva activa para esa cancha en la misma fecha y hora.", "danger")
+        if estado != "cancelada" and has_time_overlap(cancha.id, fecha, hora, horas_arriendadas, reserva.id):
+            flash("La cancha no está disponible en ese horario debido a solapamiento con otra reserva.", "danger")
             return render_template(
                 "reservas/form.html",
                 reserva=reserva,

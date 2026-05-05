@@ -1,35 +1,35 @@
 # GitHub Hooks y ADR - Guía de Implementación
 
-## 📋 Resumen del Proyecto
+## Resumen del Proyecto
 
 Este proyecto implementa un sistema completo de **Arquitectura Decision Records (ADRs)** integrado con **GitHub Hooks** para garantizar coherencia entre decisiones arquitectónicas y código implementado.
 
 ---
 
-## 🏗️ Arquitectura - Decisiones Documentadas
+## Arquitectura - Decisiones Documentadas
 
 ### ADR-001: Framework Web - Flask
 **Decisión:** Usar Flask como framework web principal
-- ✅ app.py contiene instancia Flask
-- ✅ requirements.txt tiene Flask==3.0.3
-- 📄 Ver: [docs/adr/ADR-001.md](docs/adr/ADR-001.md)
+- app.py contiene instancia Flask
+- requirements.txt tiene Flask==3.0.3
+- Ver: [docs/adr/ADR-001.md](docs/adr/ADR-001.md)
 
 ### ADR-002: Servidor WSGI - Gunicorn
 **Decisión:** Usar Gunicorn como servidor WSGI en producción
-- ✅ Procfile contiene: `web: gunicorn app:app`
-- ✅ requirements.txt contiene gunicorn==21.2.0
-- ✅ Coherencia debug vs producción documentada
-- 📄 Ver: [docs/adr/ADR-002.md](docs/adr/ADR-002.md)
+- Procfile contiene: `web: gunicorn app:app`
+- requirements.txt contiene gunicorn==21.2.0
+- Coherencia debug vs producción documentada
+- Ver: [docs/adr/ADR-002.md](docs/adr/ADR-002.md)
 
 ### ADR-003: Plataforma de Despliegue - Heroku
 **Decisión:** Usar Heroku (o alternativas: Render, Railway)
-- ✅ Procfile está presente
-- ✅ Aplicación lista para `git push heroku main`
-- 📄 Ver: [docs/adr/ADR-003.md](docs/adr/ADR-003.md)
+- Procfile está presente
+- Aplicación lista para `git push heroku main`
+- Ver: [docs/adr/ADR-003.md](docs/adr/ADR-003.md)
 
 ---
 
-## 🔧 GitHub Hooks Locales
+## GitHub Hooks Locales
 
 ### Instalación de Pre-commit Hooks
 
@@ -57,8 +57,8 @@ Los siguientes validadores se ejecutan **automáticamente** antes de cada commit
 | `flake8` | Linting Python |
 | `black` | Formato de código Python |
 | `isort` | Organización de imports |
-| `check-adr` | ✅ Valida que todos los ADRs existan |
-| `check-architecture` | ✅ Valida coherencia arquitectura-código |
+| `check-adr` | Valida que todos los ADRs existan |
+| `check-architecture` | Valida coherencia arquitectura-código |
 
 ### Uso Manual de Hooks
 
@@ -75,15 +75,15 @@ pre-commit run --all-files
 
 ---
 
-## 🚀 GitHub Actions - CI/CD Automático
+## GitHub Actions - CI/CD Automático
 
 ### Workflow: Validación de Proyecto
 
 **Archivo:** `.github/workflows/validacion.yml`
 
 Se ejecuta automáticamente en:
-- ✅ Cada push a `main` o `develop`
-- ✅ Cada Pull Request a `main` o `develop`
+- Cada push a `main` o `develop`
+- Cada Pull Request a `main` o `develop`
 
 ### Validaciones Automáticas
 
@@ -98,47 +98,47 @@ Se ejecuta automáticamente en:
 
 Para hacer merge a `main` o `develop`:
 
-```yaml
+```
 Requerido Automático:
-  ✅ Todos los validadores de GitHub Actions pasen
-  ✅ Validación de ADRs exitosa
-  ✅ Validación de coherencia arquitectura exitosa
+  Todos los validadores de GitHub Actions pasen
+  Validación de ADRs exitosa
+  Validación de coherencia arquitectura exitosa
 
 Requerido Manual:
-  ✅ Revisión de código (1+ reviewers)
-  ✅ Aprobación del PR
+  Revisión de código (1+ reviewers)
+  Aprobación del PR
 ```
 
 ---
 
-## 📋 Criterios de Aceptación
+## Criterios de Aceptación
 
-### Capa Técnica ✅
+### Capa Técnica 
 - [x] Archivo app.py funcional
 - [x] Endpoint raíz `/` disponible
 - [x] requirements.txt presente
 - [x] Procfile presente
 - [x] Aplicación desplegable
 
-### Capa Arquitectónica ✅
+### Capa Arquitectónica 
 - [x] ADR-001 (Framework Web) - Flask
 - [x] ADR-002 (Servidor WSGI) - Gunicorn
 - [x] ADR-003 (Plataforma) - Heroku
 - [x] Cada ADR tiene: Contexto, Opciones, Decisión, Rationale, Consecuencias
 
-### Capa de Coherencia ✅
-- [x] ADR-001 (Flask) → code imports Flask ✅
-- [x] ADR-002 (Gunicorn) → Procfile contiene `gunicorn app:app` ✅
-- [x] ADR-003 (Heroku) → Procfile presente ✅
+### Capa de Coherencia 
+- [x] ADR-001 (Flask) → code imports Flask 
+- [x] ADR-002 (Gunicorn) → Procfile contiene `gunicorn app:app` 
+- [x] ADR-003 (Heroku) → Procfile presente 
 
-### Capa de Rationale ✅
+### Capa de Rationale 
 - [x] Justificación de Gunicorn documentada en ADR-002
 - [x] Diferencia debug vs producción documentada
 - [x] Uso de Procfile justificado en ADR-003
 
 ---
 
-## 🔄 Workflow de Desarrollo Típico
+## Workflow de Desarrollo Típico
 
 ### 1. Clonar y Configurar
 ```bash
@@ -156,7 +156,7 @@ code app.py
 # Pre-commit valida automáticamente
 git add .
 git commit -m "feat: agregar nueva feature"
-# ↓ Se ejecutan automáticamente:
+# Se ejecutan automáticamente:
 #   - check_adr.py
 #   - check_architecture.py
 #   - black, flake8, isort
@@ -166,7 +166,7 @@ git commit -m "feat: agregar nueva feature"
 ```bash
 git push origin feature-branch
 # Abre PR en GitHub
-# ↓ GitHub Actions ejecuta:
+# GitHub Actions ejecuta:
 #   - Validación completa automática
 #   - No se puede mergear sin pasar validaciones
 ```
@@ -178,7 +178,7 @@ git push heroku main
 
 ---
 
-## 🛠️ Cómo Agregar Nuevos ADRs
+## Cómo Agregar Nuevos ADRs
 
 Si necesitas una nueva decisión arquitectónica:
 
@@ -224,18 +224,18 @@ python check_architecture.py
 
 ---
 
-## 📊 Rubrica de Evaluación
+## Rubrica de Evaluación
 
 | Criterio | Bajo | Medio | Alto |
 |----------|------|-------|------|
-| **Técnico** | No funciona | Funciona parcialmente | ✅ Funciona correctamente |
-| **ADR** | Incompleto | Completo sin profundidad | ✅ Completo y bien justificado |
-| **Coherencia** | Inconsistente | Parcial | ✅ Totalmente alineado |
-| **Rationale** | Ausente | Básico | ✅ Profundo y crítico |
+| Técnico | No funciona | Funciona parcialmente | Funciona correctamente |
+| ADR | Incompleto | Completo sin profundidad | Completo y bien justificado |
+| Coherencia | Inconsistente | Parcial | Totalmente alineado |
+| Rationale | Ausente | Básico | Profundo y crítico |
 
 ---
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Pre-commit falla: "check_adr.py no encontrado"
 ```bash
@@ -269,7 +269,7 @@ gunicorn app:app
 
 ---
 
-## 📚 Recursos
+## Recursos
 
 - **ADR Metodología:** Documenting Architecture Decisions (Michael Nygard)
 - **Heroku:** https://devcenter.heroku.com/articles/procfile
@@ -278,7 +278,7 @@ gunicorn app:app
 
 ---
 
-## ✅ Validación Final
+## Validación Final
 
 Antes de entregar tu proyecto:
 
@@ -298,10 +298,10 @@ git commit -m "chore: cumplimiento criterios de aceptación"
 git push origin main
 
 # 5. Verificar que GitHub Actions pasó en GitHub UI
-# → Actions → Validación Proyecto → ✅ All checks passed
+# → Actions → Validación Proyecto → All checks passed
 ```
 
 ---
 
 **Última actualización:** 2026-04-29  
-**Estado:** ✅ Listo para Producción
+**Estado:** Listo para Producción

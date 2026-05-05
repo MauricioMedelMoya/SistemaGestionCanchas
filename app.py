@@ -1,15 +1,22 @@
-from datetime import datetime
+import os
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from werkzeug.security import generate_password_hash, check_password_hash
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
+from functools import wraps
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///reservas_canchas.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.root_path, 'instance', 'reservas_canchas.db')}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "clave-secreta-ejemplo"
 
 db = SQLAlchemy(app)
+
+# Config auth
+ADMIN_USERNAME = 'admin'
+ADMIN_PASSWORD_HASH = generate_password_hash('admin')
 
 ESTADOS_RESERVA = ["pendiente", "confirmada", "cancelada"]
 TIPOS_DEPORTE = ["Futbol", "Padel", "Baby futbol", "Multicancha"]
@@ -28,7 +35,6 @@ class Cancha(db.Model):
 
     @property
     def precio_hora_calculado(self):
-        """Calcula el precio por hora basado en el tipo de deporte"""
         if self.tipo_deporte.lower() == "futbol":
             return Decimal('22000.00')
         else:
@@ -55,14 +61,22 @@ class Reserva(db.Model):
 
     @property
     def hora_fin(self):
-        """Calcula la hora de fin de la reserva"""
-        from datetime import datetime, timedelta
         hora_inicio = datetime.strptime(self.hora, '%H:%M').time()
         hora_fin = datetime.combine(self.fecha, hora_inicio) + timedelta(hours=self.horas_arriendadas)
         return hora_fin.time()
 
     def __repr__(self):
         return f"<Reserva {self.nombre_cliente} - {self.fecha} {self.hora} ({self.horas_arriendadas}h)>"
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            flash('Debes iniciar sesión como admin.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 def obtener_datos_cancha():
@@ -155,7 +169,6 @@ def obtener_disponibilidad(fecha_raw, hora_raw):
 with app.app_context():
     db.create_all()
 
-    # Poblar canchas de ejemplo si no existen
     if Cancha.query.count() == 0:
         canchas_ejemplo = [
             Cancha(nombre="Cancha Fútbol 1", tipo_deporte="Futbol", ubicacion="Estadio Central", precio_por_hora=Decimal('22000.00'), disponible=True),
@@ -172,6 +185,9 @@ with app.app_context():
 
 @app.route("/")
 def index():
+    if 'logged_in' not in session:
+        flash('Inicia sesión para acceder al dashboard.', 'info')
+        return redirect(url_for('login'))
     total_canchas = Cancha.query.count()
     total_reservas = Reserva.query.count()
     reservas_pendientes = Reserva.query.filter_by(estado="pendiente").count()
@@ -183,13 +199,35 @@ def index():
     )
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD_HASH, password):
+            session['logged_in'] = True
+            flash("¡Login exitoso! Bienvenido admin.", "success")
+            return redirect(url_for("listar_canchas"))
+        flash("Usuario o contraseña incorrecta.", "danger")
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop('logged_in', None)
+    flash("Sesión cerrada.", "info")
+    return redirect(url_for("index"))
+
+
 @app.route("/canchas")
+@login_required
 def listar_canchas():
     canchas = Cancha.query.order_by(Cancha.id.desc()).all()
     return render_template("canchas/lista.html", canchas=canchas)
 
 
 @app.route("/canchas/nueva", methods=["GET", "POST"])
+@login_required
 def crear_cancha():
     form_data = obtener_datos_cancha() if request.method == "POST" else None
 
@@ -212,7 +250,7 @@ def crear_cancha():
             nombre=nombre,
             tipo_deporte=tipo_deporte,
             ubicacion=ubicacion,
-            precio_por_hora=Decimal('0.00'),  # Se calcula automáticamente
+            precio_por_hora=Decimal('0.00'),
             disponible=disponible,
         )
         db.session.add(cancha)
@@ -230,6 +268,7 @@ def crear_cancha():
 
 
 @app.route("/canchas/editar/<int:id>", methods=["GET", "POST"])
+@login_required
 def editar_cancha(id):
     cancha = Cancha.query.get_or_404(id)
     form_data = obtener_datos_cancha() if request.method == "POST" else None
@@ -267,6 +306,7 @@ def editar_cancha(id):
 
 
 @app.route("/canchas/eliminar/<int:id>", methods=["POST"])
+@login_required
 def eliminar_cancha(id):
     cancha = Cancha.query.get_or_404(id)
 
@@ -282,6 +322,7 @@ def eliminar_cancha(id):
 
 
 @app.route("/reservas")
+@login_required
 def listar_reservas():
     fecha_raw = request.args.get("fecha", "").strip()
     hora_raw = request.args.get("hora", "").strip()
@@ -303,6 +344,7 @@ def listar_reservas():
 
 
 @app.route("/reservas/nueva", methods=["GET", "POST"])
+@login_required
 def crear_reserva():
     canchas = Cancha.query.order_by(Cancha.nombre.asc()).all()
     form_data = obtener_datos_reserva() if request.method == "POST" else None
@@ -378,7 +420,6 @@ def crear_reserva():
                 estados=ESTADOS_RESERVA,
             )
 
-        # Validar horario ocupado
         if estado != "cancelada" and buscar_reserva_ocupada(cancha.id, fecha, hora):
             flash("Ya existe una reserva activa para esa cancha en la misma fecha y hora.", "danger")
             return render_template(
@@ -417,6 +458,7 @@ def crear_reserva():
 
 
 @app.route("/reservas/editar/<int:id>", methods=["GET", "POST"])
+@login_required
 def editar_reserva(id):
     reserva = Reserva.query.get_or_404(id)
     canchas = Cancha.query.order_by(Cancha.nombre.asc()).all()
@@ -524,6 +566,7 @@ def editar_reserva(id):
 
 
 @app.route("/reservas/eliminar/<int:id>", methods=["POST"])
+@login_required
 def eliminar_reserva(id):
     reserva = Reserva.query.get_or_404(id)
     db.session.delete(reserva)
@@ -534,6 +577,7 @@ def eliminar_reserva(id):
 
 
 @app.route("/calendario")
+@login_required
 def calendario():
     fecha_raw = request.args.get("fecha", datetime.now().strftime("%Y-%m-%d"))
     fecha = validar_fecha(fecha_raw)
@@ -544,18 +588,26 @@ def calendario():
 
     canchas = Cancha.query.filter_by(disponible=True).order_by(Cancha.nombre.asc()).all()
 
-    # Obtener reservas para esa fecha
     reservas_dia = Reserva.query.filter(
         Reserva.fecha == fecha,
         Reserva.estado != "cancelada"
     ).order_by(Reserva.hora.asc()).all()
 
-    # Agrupar reservas por cancha
     reservas_por_cancha = {}
     for reserva in reservas_dia:
         if reserva.cancha_id not in reservas_por_cancha:
             reservas_por_cancha[reserva.cancha_id] = []
-        reservas_por_cancha[reserva.cancha_id].append(reserva)
+        
+        reserva_data = {
+            'id': reserva.id,
+            'hora': reserva.hora,
+            'hora_fin': reserva.hora_fin.strftime('%H:%M'),
+            'estado': reserva.estado,
+            'horas_arriendadas': reserva.horas_arriendadas,
+            'nombre_cliente': reserva.nombre_cliente
+        }
+        
+        reservas_por_cancha[reserva.cancha_id].append(reserva_data)
 
     return render_template(
         "calendario.html",
@@ -567,4 +619,4 @@ def calendario():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

@@ -14,8 +14,14 @@
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">Reservas de canchas</a>
             <div class="navbar-nav flex-row gap-3">
-                <a class="nav-link" href="{{ url_for('listar_canchas') }}">Canchas</a>
-                <a class="nav-link" href="{{ url_for('listar_reservas') }}">Reservas</a>
+                {% if 'logged_in' in session %}
+                  <a class="nav-link" href="{{ url_for('listar_canchas') }}">Canchas</a>
+                  <a class="nav-link" href="{{ url_for('listar_reservas') }}">Reservas</a>
+                  <span class="nav-link text-warning">👤 Admin</span>
+                  <a class="nav-link" href="{{ url_for('logout') }}">Salir</a>
+                {% else %}
+                  <a class="nav-link" href="{{ url_for('login') }}">Admin Login</a>
+                {% endif %}
                 <a class="nav-link" href="{{ url_for('calendario') }}">Calendario</a>
             </div>
         </div>

@@ -8,6 +8,10 @@ from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
 
 app = Flask(__name__)
+
+# asegura que la carpeta instance exista para la base de datos SQLite
+os.makedirs(app.instance_path, exist_ok=True)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.root_path, 'instance', 'reservas_canchas.db')}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "clave-secreta-ejemplo"

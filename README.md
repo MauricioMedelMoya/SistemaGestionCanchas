@@ -24,7 +24,7 @@ Aplicación web desarrollada con Flask para la gestión interna de canchas depor
 ## Instalación
 
 ```bash
-git clone https://github.com/camilorozas/arriendo-canchas.git
+git clone https://github.com/MauricioMedelMoya/SistemaGestionCanchas.git
 cd arriendo-canchas
 pip install -r requirements.txt
 python app.py
